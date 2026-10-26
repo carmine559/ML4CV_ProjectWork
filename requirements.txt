@@ -1,0 +1,15 @@
+# torch/torchvision CUDA 12.x builds support Ada GPUs (sm_89, e.g. L40) and run on any
+# driver >= 570 (the UniBo cluster has driver 590 / CUDA 13.1). slurm/setup_giano.sh installs
+#   pip install torch==2.7.1 torchvision==0.22.1 --index-url https://download.pytorch.org/whl/cu128
+# Smoke-tested with: torch 2.7.1, torchvision 0.22.1, numpy 2.2.4, scipy 1.14.0,
+# scikit-learn 1.8.0, Pillow 11.3.0, PyYAML 6.0.3 (Python 3.12).
+torch==2.7.1
+torchvision==0.22.1
+numpy>=1.26
+scipy>=1.11
+scikit-learn>=1.3
+Pillow>=10.0
+PyYAML>=6.0
+tqdm>=4.66
+tensorboard>=2.16
+kaggle>=1.6  # only for tools/download_prw.sh
