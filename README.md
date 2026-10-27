@@ -29,7 +29,7 @@ slurm/train_prw.sbatch   1x L40 template: train, auto-resume/requeue, then evalu
 
 ```bash
 pip install -r requirements.txt            # torch 2.7.1 / torchvision 0.22.1 (CUDA 12.x, Ada OK)
-bash tools/download_prw.sh data/PRW        # Kaggle CLI + ~/.kaggle/kaggle.json; prints PRW_ROOT
+bash tools/download_prw.sh data/PRW        # Kaggle CLI + ~/.kaggle/access_token; prints PRW_ROOT
 export PRW_ROOT=/path/printed/above        # or pass --data-root
 ```
 
@@ -44,7 +44,7 @@ The loader expects `frames/`, `annotations/*.jpg.mat`, `frame_train.mat`, `frame
 ssh <name.surname>@giano.cs.unibo.it "mkdir -p /scratch.hpc/<name.surname>/prw-seqnet"
 scp -r Scripts configs slurm tools requirements.txt README.md <name.surname>@giano.cs.unibo.it:/scratch.hpc/<name.surname>/prw-seqnet/
 
-# on giano, once: venv (torch cu128), cached ImageNet weights, PRW from Kaggle (needs ~/.kaggle/kaggle.json)
+# on giano, once: venv (torch cu128), cached ImageNet weights, PRW from Kaggle (needs ~/.kaggle/access_token)
 cd /scratch.hpc/$USER/prw-seqnet && bash slurm/setup_giano.sh
 
 mkdir -p logs

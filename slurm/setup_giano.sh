@@ -5,7 +5,8 @@
 #
 # Everything goes under /scratch.hpc/$USER: the home quota is only 400 MB (a CUDA torch
 # install alone is several GB). /scratch.hpc deletes files not accessed for 40 days.
-# Needs a Kaggle API token in ~/.kaggle/kaggle.json (kaggle.com -> Settings -> API).
+# Needs a Kaggle API token in ~/.kaggle/access_token (kaggle.com -> Settings -> API ->
+# "Generate New Token"), unless PRW is already unzipped in $DATA.
 set -euo pipefail
 
 BASE="${BASE:-/scratch.hpc/$USER}"

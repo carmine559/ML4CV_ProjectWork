@@ -12,4 +12,4 @@ Pillow>=10.0
 PyYAML>=6.0
 tqdm>=4.66
 tensorboard>=2.16
-kaggle>=1.6  # only for tools/download_prw.sh
+kaggle>=1.8  # only for tools/download_prw.sh (>=1.8 reads the new KAGGLE_API_TOKEN / ~/.kaggle/access_token)

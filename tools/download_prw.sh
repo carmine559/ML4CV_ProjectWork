@@ -1,7 +1,9 @@
 #!/usr/bin/env bash
 # Download PRW from Kaggle (edoardomerli/prw-person-re-identification-in-the-wild).
-# Needs the Kaggle CLI (pip install kaggle) and an API token in ~/.kaggle/kaggle.json
-# (or KAGGLE_USERNAME / KAGGLE_KEY in the environment).
+# Needs the Kaggle CLI >= 1.8 (pip install kaggle) and an API token: kaggle.com -> Settings ->
+# API -> "Generate New Token", saved in ~/.kaggle/access_token (or $KAGGLE_API_TOKEN).
+# Legacy alternatives: ~/.kaggle/kaggle.json, or KAGGLE_USERNAME / KAGGLE_KEY.
+# Without any token: download the zip in a browser, unzip it into DEST, and this script skips.
 #
 #   bash tools/download_prw.sh [DEST_DIR]        # default: data/PRW
 #

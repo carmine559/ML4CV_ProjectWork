@@ -43,6 +43,15 @@ mkdir -p "$OUT" logs
 
 echo "[$(date)] job $SLURM_JOB_ID on $(hostname) | restart count ${SLURM_RESTART_COUNT:-0} | AMP=$AMP | OUT=$OUT"
 nvidia-smi --query-gpu=name,memory.total,driver_version --format=csv
+if [[ ! -x "$PY" ]]; then
+  echo "ERROR: $PY is missing or not runnable on $(hostname)." >&2
+  if [[ -L "$PY" ]]; then
+    echo "  It links to $(readlink -f "$PY"), which does not exist on this compute node." >&2
+  else
+    echo "  Create the venv first, on giano: bash slurm/setup_giano.sh" >&2
+  fi
+  exit 1
+fi
 "$PY" -c "import torch; assert torch.cuda.is_available(), 'no CUDA'; \
 print('torch', torch.__version__, '| cuda', torch.version.cuda, '|', torch.cuda.get_device_name(0))"
 
