@@ -2,3 +2,9 @@ weights/*
 
 report.md
 PRW_architecture.png
+
+# training outputs and data (checkpoints are ~200 MB: GitHub rejects files > 100 MB)
+exp_*/
+data/
+*.pth
+*.pt

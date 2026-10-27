@@ -51,7 +51,7 @@ mkdir -p logs
 SMOKE=1 sbatch --time=01:00:00 slurm/train_prw.sbatch   # 20-iteration check + full eval (~pipeline test)
 sbatch slurm/train_prw.sbatch                           # official recipe, fp32
 AMP=bf16 sbatch slurm/train_prw.sbatch                  # faster autocast variant
-squeue -u $USER ; tail -f logs/seqnet_prw_<jobid>.out
+squeue -u $USER ; tail -f logs/prw_<jobid>.out
 ```
 
 The job saves `exp_prw/epoch_N.pth` after every epoch and always restarts with `--resume auto`. Five minutes before the time limit it requeues itself; if requeueing is not permitted, run `sbatch` again and it resumes. After training it evaluates the last epoch into `exp_prw/eval_epoch_N.json`. Check the partition's time limit with `sinfo -p l40 -o "%P %l"` and keep `--time` within it.
@@ -87,7 +87,7 @@ The official released PRW checkpoint loads into this model; the only missing key
 | Model | mAP | top-1 |
 | --- | --- | --- |
 | SeqNet, paper (NAE+SeqNet, w/o CBGM) | 46.7 | 83.4 |
-| This reimplementation, fp32 | TBD | TBD |
+| This reimplementation, fp32 (1x L40, 3h20m) | 46.40 | 83.08 |
 | This reimplementation, bf16 | TBD | TBD |
 | + flip TTA | TBD | TBD |
 
