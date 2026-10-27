@@ -1,0 +1,4 @@
+[Tue Oct 27 11:13:59 AM CET 2026] job 73934 on slurmng-n4 | restart count 0 | AMP=off | OUT=/scratch.hpc/carmine.santella/ML4CV_ProjectWork/exp_prw
+name, memory.total [MiB], driver_version
+NVIDIA L40, 46068 MiB, 590.48.01
+/var/spool/slurmd/job73934/slurm_script: line 46: /scratch.hpc/carmine.santella/venv-prw/bin/python3: No such file or directory
