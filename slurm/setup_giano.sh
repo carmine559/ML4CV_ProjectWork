@@ -12,6 +12,7 @@ set -euo pipefail
 BASE="${BASE:-/scratch.hpc/$USER}"
 VENV="${VENV:-$BASE/venv-prw}"
 DATA="${DATA:-$BASE/data/PRW}"
+WEIGHTS_DIR="${WEIGHTS_DIR:-$BASE/weights}"   # SOLIDER checkpoints
 export TORCH_HOME="${TORCH_HOME:-$BASE/.cache/torch}"
 export XDG_CACHE_HOME="${XDG_CACHE_HOME:-$BASE/.cache}"
 export TMPDIR="${TMPDIR_SETUP:-$BASE/tmp}"    # pip unpacks multi-GB wheels here
@@ -33,8 +34,10 @@ PY="$VENV/bin/python3"
 print('torch', torch.__version__, '| weights cached in', torch.hub.get_dir())"
 
 PATH="$VENV/bin:$PATH" bash tools/download_prw.sh "$DATA"
+# SOLIDER Swin-Small weights for configs/prw_solider_swin_s.yaml (skipped if already present)
+PATH="$VENV/bin:$PATH" bash tools/download_solider.sh "$WEIGHTS_DIR" small
 
 rm -rf "$TMPDIR"
-du -sh "$VENV" "$DATA" "$TORCH_HOME" 2>/dev/null || true
+du -sh "$VENV" "$DATA" "$TORCH_HOME" "$WEIGHTS_DIR" 2>/dev/null || true
 echo "quota check (home must stay < 400 MB):"; du -sh "$HOME" 2>/dev/null || true
 echo "Setup done. Next: mkdir -p logs && SMOKE=1 sbatch --time=01:00:00 slurm/train_prw.sbatch"

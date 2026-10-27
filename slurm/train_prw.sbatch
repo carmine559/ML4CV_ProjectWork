@@ -7,6 +7,8 @@
 #   SMOKE=1 sbatch --time=01:00:00 slurm/train_prw.sbatch   # 20-iteration pipeline check + full eval
 #   sbatch slurm/train_prw.sbatch                           # official recipe, fp32 (baseline)
 #   AMP=bf16 sbatch slurm/train_prw.sbatch                  # faster autocast, not bit-exact official
+#   CFG=configs/prw_solider_swin_s.yaml sbatch slurm/train_prw.sbatch   # SOLIDER Swin-S backbone
+# Outputs go to exp_<config name> (exp_smoke_<config name> for SMOKE=1).
 # Re-submitting (or the automatic requeue) resumes from the newest epoch_*.pth in $OUT.
 #SBATCH --job-name=prw
 #SBATCH --partition=l40
@@ -31,17 +33,20 @@ PY="${VENV:-$BASE/venv-prw}/bin/python3"
 export PRW_ROOT="${PRW_ROOT:-$BASE/data/PRW}"
 export TORCH_HOME="${TORCH_HOME:-$BASE/.cache/torch}"       # ResNet-50 weights cached by setup
 export XDG_CACHE_HOME="${XDG_CACHE_HOME:-$BASE/.cache}"     # keep caches out of the 400 MB home
+export WEIGHTS_DIR="${WEIGHTS_DIR:-$BASE/weights}"          # SOLIDER checkpoints (setup_giano.sh)
 export PYTHONUNBUFFERED=1
 AMP="${AMP:-off}"                                           # off = official fp32 | bf16 | fp16
+CFG="${CFG:-configs/prw.yaml}"
+EXP="$(basename "$CFG" .yaml)"
 
 if [[ "${SMOKE:-0}" == 1 ]]; then
-  OUT="${OUT:-$PWD/exp_smoke}"; EXTRA=(--epochs 1 --max-iters 20)
+  OUT="${OUT:-$PWD/exp_smoke_$EXP}"; EXTRA=(--epochs 1 --max-iters 20)
 else
-  OUT="${OUT:-$PWD/exp_prw}"; EXTRA=()
+  OUT="${OUT:-$PWD/exp_$EXP}"; EXTRA=()
 fi
 mkdir -p "$OUT" logs
 
-echo "[$(date)] job $SLURM_JOB_ID on $(hostname) | restart count ${SLURM_RESTART_COUNT:-0} | AMP=$AMP | OUT=$OUT"
+echo "[$(date)] job $SLURM_JOB_ID on $(hostname) | restart count ${SLURM_RESTART_COUNT:-0} | CFG=$CFG | AMP=$AMP | OUT=$OUT"
 nvidia-smi --query-gpu=name,memory.total,driver_version --format=csv
 if [[ ! -x "$PY" ]]; then
   echo "ERROR: $PY is missing or not runnable on $(hostname)." >&2
@@ -58,8 +63,8 @@ print('torch', torch.__version__, '| cuda', torch.version.cuda, '|', torch.cuda.
 trap 'echo "[$(date)] time limit close: requeueing $SLURM_JOB_ID"; \
   scontrol requeue "$SLURM_JOB_ID" || echo "requeue refused: re-run sbatch, training resumes by itself"; exit 0' USR1
 
-# ---- train (official recipe: bs 5, lr 0.003, 18 epochs, lr x0.1 at 16) ----
-"$PY" Scripts/train.py --cfg configs/prw.yaml --data-root "$PRW_ROOT" --output-dir "$OUT" \
+# ---- train (prw.yaml = official recipe: bs 5, lr 0.003, 18 epochs, lr x0.1 at 16) ----
+"$PY" Scripts/train.py --cfg "$CFG" --data-root "$PRW_ROOT" --output-dir "$OUT" \
   --amp "$AMP" --workers 6 --resume auto ${EXTRA[@]+"${EXTRA[@]}"} &
 wait $!
 

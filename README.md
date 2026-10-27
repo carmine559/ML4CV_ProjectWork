@@ -4,6 +4,8 @@ This is a clean reimplementation of **SeqNet** (Z. Li and D. Miao, *Sequential E
 
 The model code is adapted closely from the official repository [serend1p1ty/SeqNet](https://github.com/serend1p1ty/SeqNet) (MIT License, Copyright (c) 2022 Zj Li; see `LICENSE-SeqNet`). Every adapted file starts with an attribution header that lists its changes. All credit for the method goes to the original authors. Search metrics are computed with the course-provided `eval_search_prw` (`Scripts/evaluate.py`), which is kept unchanged.
 
+The optional Swin backbone follows [SOLIDER-PersonSearch](https://github.com/tinyvision/SOLIDER-PersonSearch) (W. Chen et al., *Beyond Appearance: a Semantic Controllable Self-Supervised Learning Framework for Human-Centric Visual Tasks*, CVPR 2023). Its Swin Transformer code is copied from [SOLIDER](https://github.com/tinyvision/SOLIDER) (Apache License 2.0, see `LICENSE-SOLIDER`), and it uses SOLIDER's self-supervised weights, pre-trained on LUPerson (4.18M unlabelled person images).
+
 > `main.ipynb`, `report.md` and `weights/` belong to the earlier course submission: a single-stage Faster R-CNN FPN with OIM and NAE. They do not use this code. The original code is preserved in `archive/course_submission_v1/`.
 
 ## Layout
@@ -11,7 +13,9 @@ The model code is adapted closely from the official repository [serend1p1ty/SeqN
 ```text
 Scripts/
   seqnet.py      SeqNet: RPN, Faster R-CNN head, baseline (re-ID) head, NAE, FCS, CWS
-  backbone.py    build_backbone(cfg): ResNet-50 conv1-layer3 stem + res5 head (single builder)
+  backbone.py    build_backbone(cfg): ResNet-50 conv1-layer3 stem + res5 head, or SOLIDER Swin
+  swin.py        SOLIDER Swin split for SeqNet: stages 1-3 stem, stage 4 RoI head; weight loader
+  swin_transformer.py  SOLIDER's Swin Transformer with the semantic controller (Apache-2.0)
   oim.py         OIM loss (LUT 482 / CQ 500, updated in backward like the official code)
   prw.py         PRW dataset and loaders (official box and pid conventions)
   transforms.py  ToTensor + horizontal flip (the official augmentation)
@@ -21,7 +25,9 @@ Scripts/
   train.py       training entry point
   eval_prw.py    evaluation entry point (det_thresh sweep, JSON output)
 configs/prw.yaml         the full recipe, identical to config.py defaults
+configs/prw_solider_swin_s.yaml   SOLIDER Swin-Small backbone (SOLIDER-PersonSearch recipe)
 tools/download_prw.sh    Kaggle download
+tools/download_solider.sh         SOLIDER pre-trained Swin weights (Google Drive, via gdown)
 slurm/train_prw.sbatch   1x L40 template: train, auto-resume/requeue, then evaluate
 ```
 
@@ -52,9 +58,13 @@ SMOKE=1 sbatch --time=01:00:00 slurm/train_prw.sbatch   # 20-iteration check + f
 sbatch slurm/train_prw.sbatch                           # official recipe, fp32
 AMP=bf16 sbatch slurm/train_prw.sbatch                  # faster autocast variant
 squeue -u $USER ; tail -f logs/prw_<jobid>.out
+
+# SOLIDER Swin-Small backbone (setup_giano.sh also downloads its weights to /scratch.hpc/$USER/weights)
+CFG=configs/prw_solider_swin_s.yaml SMOKE=1 sbatch --time=01:00:00 slurm/train_prw.sbatch
+CFG=configs/prw_solider_swin_s.yaml sbatch slurm/train_prw.sbatch
 ```
 
-The job saves `exp_prw/epoch_N.pth` after every epoch and always restarts with `--resume auto`. Five minutes before the time limit it requeues itself; if requeueing is not permitted, run `sbatch` again and it resumes. After training it evaluates the last epoch into `exp_prw/eval_epoch_N.json`. Check the partition's time limit with `sinfo -p l40 -o "%P %l"` and keep `--time` within it.
+Each config writes to its own folder, `exp_<config name>` (for example `exp_prw` or `exp_prw_solider_swin_s`). The job saves `epoch_N.pth` there after every epoch and always restarts with `--resume auto`. Five minutes before the time limit it requeues itself; if requeueing is not permitted, run `sbatch` again and it resumes. After training it evaluates the last epoch into `eval_epoch_N.json` in the same folder. Check the partition's time limit with `sinfo -p l40 -o "%P %l"` and keep `--time` within it.
 
 Running directly:
 
@@ -88,10 +98,11 @@ The official released PRW checkpoint loads into this model; the only missing key
 | --- | --- | --- |
 | SeqNet, paper (NAE+SeqNet, w/o CBGM) | 46.7 | 83.4 |
 | This reimplementation, fp32 (1x L40, 3h20m) | 46.40 | 83.08 |
-| This reimplementation, bf16 | TBD | TBD |
+| SOLIDER Swin-S + SeqNet, paper (SOLIDER-PersonSearch README) | 59.84 | 86.73 |
+| This reimplementation, SOLIDER Swin-S, fp32 | TBD | TBD |
 | + flip TTA | TBD | TBD |
 
-CBGM (paper: 47.6 / 87.6) is not used because it lives inside the evaluation function.
+CBGM (paper: 47.6 / 87.6) is not used because it lives inside the evaluation function. SOLIDER-PersonSearch uses SeqNet's evaluation code with CBGM off by default.
 
 ## Differences from the official code
 
@@ -101,5 +112,12 @@ CBGM (paper: 47.6 / 87.6) is not used because it lives inside the evaluation fun
 - **Engineering:** no evaluation during training by default (official: every epoch), atomic checkpoints (last 2 kept), RNG state restored on resume. torchvision `weights=` API: IMAGENET1K_V1 is the same weights as the old `pretrained=True`.
 - **Batch norm:** the official code fine-tunes plain BatchNorm (only `conv1` and `bn1` are frozen). `MODEL.BACKBONE.FROZEN_BN` exists but is off.
 - **Library versions:** the official code targeted much older PyTorch. Its authors warn that results depend on the PyTorch version.
+
+**SOLIDER Swin backbone** (`MODEL.BACKBONE.NAME swin_tiny|swin_small|swin_base`): as in SOLIDER-PersonSearch, Swin stages 1-3 replace ResNet conv1-layer3, and stage 3's patch merging plus stage 4 replace res5 in both heads. RoI features are average-pooled, and the semantic weight is 0.6. The recipe is SeqNet's with batch 3 and lr 3e-4 for Swin-Small (SOLIDER-PersonSearch `run.sh`). Differences: the pre-trained checkpoint is loaded into the Swin before the re-ID head is copied, which gives the same weights as loading it afterwards, and the semantic-weight vector follows the input's device instead of `.cuda()`. A CPU self-test checks four things:
+
+- the stem's output equals the stage-3 output of SOLIDER's `SwinTransformer.forward`;
+- SOLIDER checkpoints, raw or converted, load into the stem and the re-ID head, and a checkpoint of the wrong size is rejected;
+- a training step gives finite losses, with gradients in the stem and in both stage-4 heads;
+- the gallery embeddings keep CWS (norm equal to the detection score).
 
 A parity test built the official `SeqNet` from the original sources with the same torchvision. It found identical parameter names, shapes and counts (48,418,735), identical frozen parameters, buffers and random initialisation, and identical training losses, gradients, LUT/CQ updates, detections and embeddings on the same input.

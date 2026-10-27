@@ -1,0 +1,15 @@
+# SeqNet on PRW with a SOLIDER Swin-Small backbone (SOLIDER-PersonSearch recipe: README and
+# run.sh; reported PRW 59.84 mAP / 86.73 top-1). Only the differences from the SeqNet defaults
+# in Scripts/config.py are listed: everything else (18 epochs, lr x0.1 at 16, SGD, 900x1500,
+# heads, OIM) is the official SeqNet recipe, as in SOLIDER-PersonSearch.
+# Weights: bash tools/download_solider.sh "$WEIGHTS_DIR" small (slurm/setup_giano.sh does it).
+INPUT:
+  BATCH_SIZE_TRAIN: 3      # SOLIDER-PersonSearch value for Swin-Small
+SOLVER:
+  BASE_LR: 0.0003          # SOLIDER-PersonSearch value (SGD, as in SeqNet)
+MODEL:
+  BACKBONE:
+    NAME: swin_small
+    SEMANTIC_WEIGHT: 0.6
+    WEIGHTS: ${WEIGHTS_DIR}/solider_swin_small.pth
+OUTPUT_DIR: ./exp_prw_solider_swin_s

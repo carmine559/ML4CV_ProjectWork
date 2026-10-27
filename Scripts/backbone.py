@@ -3,8 +3,9 @@
 #
 # Changes: torchvision `weights=` API (IMAGENET1K_V1 = the old `pretrained=True` weights),
 # optional FrozenBatchNorm2d (off by default: the official code uses plain, trainable
-# nn.BatchNorm2d), and a single `build_backbone(cfg)` entry point so other backbones
-# (e.g. ConvNeXt/Swin) can be added later without touching the detector.
+# nn.BatchNorm2d), and a single `build_backbone(cfg)` entry point that also builds the SOLIDER
+# Swin backbones (swin.py) without touching the detector.
+import os
 from collections import OrderedDict
 
 import torch.nn.functional as F
@@ -80,4 +81,16 @@ def build_backbone(cfg):
     bcfg = cfg.MODEL.BACKBONE
     if bcfg.NAME in _RESNET_WEIGHTS:
         return build_resnet(bcfg.NAME, pretrained=bcfg.PRETRAINED, frozen_bn=bcfg.FROZEN_BN)
+    if bcfg.NAME.startswith("swin_"):
+        from swin import build_swin
+
+        weights = None
+        if bcfg.PRETRAINED:  # SOLIDER checkpoint; $VARS are expanded (e.g. ${WEIGHTS_DIR})
+            weights = os.path.expandvars(bcfg.WEIGHTS)
+            if not os.path.isfile(weights):
+                raise FileNotFoundError(
+                    f"SOLIDER weights not found: {weights!r} (MODEL.BACKBONE.WEIGHTS). "
+                    "Get them with tools/download_solider.sh, or set MODEL.BACKBONE.PRETRAINED false."
+                )
+        return build_swin(bcfg.NAME, semantic_weight=bcfg.SEMANTIC_WEIGHT, weights=weights)
     raise NotImplementedError(f"Unknown backbone: {bcfg.NAME}")

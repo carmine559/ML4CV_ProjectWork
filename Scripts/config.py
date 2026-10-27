@@ -56,9 +56,11 @@ DEFAULTS = {
     },
     "MODEL": {
         "BACKBONE": {
-            "NAME": "resnet50",
-            "PRETRAINED": True,  # ImageNet IMAGENET1K_V1
-            "FROZEN_BN": False,  # official: plain trainable BatchNorm2d
+            "NAME": "resnet50",  # resnet50 | swin_tiny | swin_small | swin_base (SOLIDER)
+            "PRETRAINED": True,  # resnet50: ImageNet IMAGENET1K_V1; swin_*: the WEIGHTS file
+            "FROZEN_BN": False,  # official: plain trainable BatchNorm2d (resnet50 only)
+            "SEMANTIC_WEIGHT": 0.6,  # swin_* only: SOLIDER lambda (0.6 in SOLIDER-PersonSearch)
+            "WEIGHTS": "",  # swin_* only: SOLIDER checkpoint path; $VARS are expanded
         },
         "RPN": {
             "NMS_THRESH": 0.7,
