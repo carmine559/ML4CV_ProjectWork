@@ -40,6 +40,7 @@ DEFAULTS = {
     "SOLVER": {
         "MAX_EPOCHS": 18,
         "BASE_LR": 0.003,
+        "HEAD_LR_MULT": 1.0,  # lr x this for the non-pre-trained layers (RPN, box predictors, NAE); 1 = official
         "WARMUP_FACTOR": 0.001,  # linear warm-up over the whole first epoch
         "LR_DECAY_MILESTONES": [16],
         "GAMMA": 0.1,

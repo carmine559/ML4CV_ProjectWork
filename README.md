@@ -26,6 +26,7 @@ Scripts/
   eval_prw.py    evaluation entry point (det_thresh sweep, JSON output)
 configs/prw.yaml         the full recipe, identical to config.py defaults
 configs/prw_solider_swin_s.yaml   SOLIDER Swin-Small backbone (SOLIDER-PersonSearch recipe)
+configs/prw_solider_swin_s_head10x.yaml   the same, with a 10x lr for the non-pre-trained layers
 tools/download_prw.sh    Kaggle download
 tools/download_solider.sh         SOLIDER pre-trained Swin weights (Google Drive, via gdown)
 slurm/train_prw.sbatch   1x L40 template: train, auto-resume/requeue, then evaluate
@@ -62,6 +63,7 @@ squeue -u $USER ; tail -f logs/prw_<jobid>.out
 # SOLIDER Swin-Small backbone (setup_giano.sh also downloads its weights to /scratch.hpc/$USER/weights)
 CFG=configs/prw_solider_swin_s.yaml SMOKE=1 sbatch --time=01:00:00 slurm/train_prw.sbatch
 CFG=configs/prw_solider_swin_s.yaml sbatch slurm/train_prw.sbatch
+CFG=configs/prw_solider_swin_s_head10x.yaml sbatch slurm/train_prw.sbatch
 ```
 
 Each config writes to its own folder, `exp_<config name>` (for example `exp_prw` or `exp_prw_solider_swin_s`). The job saves `epoch_N.pth` there after every epoch and always restarts with `--resume auto`. Five minutes before the time limit it requeues itself; if requeueing is not permitted, run `sbatch` again and it resumes. After training it evaluates the last epoch into `eval_epoch_N.json` in the same folder. Check the partition's time limit with `sinfo -p l40 -o "%P %l"` and keep `--time` within it.
@@ -76,6 +78,8 @@ python Scripts/train.py --cfg configs/prw.yaml --data-root $PRW_ROOT --output-di
 The defaults are the official recipe: batch 5, SGD lr 0.003 (momentum 0.9, wd 5e-4), linear warm-up over epoch 0, 18 epochs, lr x0.1 at epoch 16, 900x1500 input, gradient clipping at 10. Logs go to `train_log.csv`, `epoch_log.csv` and `tf_log/` (TensorBoard).
 
 **Batch size and LR:** follow the linear scaling rule, `lr = 0.003 * batch / 5`, for example `--batch-size 2 --lr 0.0012`. The official README says batch 5 needs about 28 GB in fp32, which fits on a 48 GB L40.
+
+**Head learning rate:** `SOLVER.HEAD_LR_MULT` (default 1, the official single lr) multiplies the lr of the layers that start from random initialisation: the RPN head, both box predictors and the NAE embedding. The pre-trained backbone and res5 / stage-4 heads keep `BASE_LR`, which is the lr in the logs. `prw_solider_swin_s_head10x.yaml` uses 10, so the heads train at SeqNet's 0.003 and the Swin at SOLIDER's 3e-4.
 
 **Kaggle notebook (T4/P100, 16 GB, 12 h sessions):** run with `--data-root /kaggle/input/<PRW dataset folder> --output-dir /kaggle/working/exp_prw --amp fp16 --batch-size 2 --lr 0.0012`. To continue in a later session, attach the previous output and run with `--resume <path to epoch_N.pth>`.
 
@@ -101,6 +105,7 @@ The official released PRW checkpoint loads into this model; the only missing key
 | SOLIDER Swin-S + SeqNet, paper (SOLIDER-PersonSearch README) | 59.84 | 86.73 |
 | This reimplementation, SOLIDER Swin-S, fp32 (1x L40, 6h00m) | **60.19** | **87.36** |
 | + flip TTA | TBD | TBD |
+| SOLIDER Swin-S, head lr x10 (`prw_solider_swin_s_head10x.yaml`) | TBD | TBD |
 
 CBGM (paper: 47.6 / 87.6) is not used because it lives inside the evaluation function. SOLIDER-PersonSearch uses SeqNet's evaluation code with CBGM off by default.
 

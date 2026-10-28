@@ -69,6 +69,31 @@ def apply_cli(cfg, args):
     return cfg
 
 
+# parameters loaded from ImageNet / SOLIDER; everything else (RPN head, both box predictors,
+# NAE embedding) starts from random initialisation
+PRETRAINED_PREFIXES = ("backbone.", "roi_heads.box_head.", "roi_heads.reid_head.")
+
+
+def build_optimizer(cfg, model):
+    """SGD. SOLVER.HEAD_LR_MULT = 1 is the official single parameter group. Otherwise the
+    randomly initialised layers train at BASE_LR * HEAD_LR_MULT and the pre-trained ones at
+    BASE_LR (group 0, the lr that is logged)."""
+    named = [(n, p) for n, p in model.named_parameters() if p.requires_grad]
+    mult = cfg.SOLVER.HEAD_LR_MULT
+    if mult == 1:
+        groups = [p for _, p in named]
+    else:
+        pre = [p for n, p in named if n.startswith(PRETRAINED_PREFIXES)]
+        new = [p for n, p in named if not n.startswith(PRETRAINED_PREFIXES)]
+        groups = [{"params": pre}, {"params": new, "lr": cfg.SOLVER.BASE_LR * mult}]
+        print(f"Optimizer: pre-trained {sum(p.numel() for p in pre):,} params at lr {cfg.SOLVER.BASE_LR:g}"
+              f" | new {sum(p.numel() for p in new):,} params at lr {cfg.SOLVER.BASE_LR * mult:g}")
+    return torch.optim.SGD(
+        groups, lr=cfg.SOLVER.BASE_LR, momentum=cfg.SOLVER.SGD_MOMENTUM,
+        weight_decay=cfg.SOLVER.WEIGHT_DECAY,
+    )
+
+
 class _Truncated:
     """Debug helper: limit an iterable DataLoader to n batches."""
 
@@ -103,11 +128,7 @@ def main(argv=None):
         train_loader = _Truncated(train_loader, args.max_iters)
     test_loaders = build_test_loaders(cfg) if cfg.EVAL_PERIOD > 0 else None
 
-    params = [p for p in model.parameters() if p.requires_grad]
-    optimizer = torch.optim.SGD(
-        params, lr=cfg.SOLVER.BASE_LR, momentum=cfg.SOLVER.SGD_MOMENTUM,
-        weight_decay=cfg.SOLVER.WEIGHT_DECAY,
-    )
+    optimizer = build_optimizer(cfg, model)
     lr_scheduler = torch.optim.lr_scheduler.MultiStepLR(
         optimizer, milestones=cfg.SOLVER.LR_DECAY_MILESTONES, gamma=cfg.SOLVER.GAMMA
     )

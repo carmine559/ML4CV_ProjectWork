@@ -1,0 +1,15 @@
+# configs/prw_solider_swin_s.yaml with a 10x learning rate for the layers that are not
+# pre-trained (RPN head, both box predictors, NAE embedding): they train at 0.003, SeqNet's own
+# lr, while the pre-trained Swin keeps SOLIDER's 3e-4. Motivation: with a single lr of 3e-4 the
+# Swin-S run detects worse than ResNet-50 (PRW AP 91.49 vs 94.02, recall 95.66 vs 96.45).
+INPUT:
+  BATCH_SIZE_TRAIN: 3
+SOLVER:
+  BASE_LR: 0.0003
+  HEAD_LR_MULT: 10.0
+MODEL:
+  BACKBONE:
+    NAME: swin_small
+    SEMANTIC_WEIGHT: 0.6
+    WEIGHTS: ${WEIGHTS_DIR}/solider_swin_small.pth
+OUTPUT_DIR: ./exp_prw_solider_swin_s_head10x
