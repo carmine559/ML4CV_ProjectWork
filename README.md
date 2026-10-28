@@ -99,7 +99,7 @@ The official released PRW checkpoint loads into this model; the only missing key
 | SeqNet, paper (NAE+SeqNet, w/o CBGM) | 46.7 | 83.4 |
 | This reimplementation, fp32 (1x L40, 3h20m) | 46.40 | 83.08 |
 | SOLIDER Swin-S + SeqNet, paper (SOLIDER-PersonSearch README) | 59.84 | 86.73 |
-| This reimplementation, SOLIDER Swin-S, fp32 | TBD | TBD |
+| This reimplementation, SOLIDER Swin-S, fp32 (1x L40, 6h00m) | **60.19** | **87.36** |
 | + flip TTA | TBD | TBD |
 
 CBGM (paper: 47.6 / 87.6) is not used because it lives inside the evaluation function. SOLIDER-PersonSearch uses SeqNet's evaluation code with CBGM off by default.
