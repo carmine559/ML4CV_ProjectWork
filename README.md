@@ -24,6 +24,7 @@ Scripts/
   evaluate.py    course eval_search_prw (unchanged)
   train.py       training entry point
   eval_prw.py    evaluation entry point (det_thresh sweep, JSON output)
+  qualitative.py figures from cached features: retrievals vs annotated people, error causes
 configs/prw.yaml         the full recipe, identical to config.py defaults
 configs/prw_solider_swin_s.yaml   SOLIDER Swin-Small backbone (SOLIDER-PersonSearch recipe)
 configs/prw_solider_swin_s_head10x.yaml   the same, with a 10x lr for the non-pre-trained layers
@@ -95,6 +96,28 @@ The script extracts gallery detections and features and query features (GT query
 Note on thresholds: `0.5` is SeqNet's default, and with `SCORE_THRESH_TEST=0.5` lower values give the same result. Picking a threshold on the test set amounts to tuning on the test set, so report 0.5. `--flip-tta` (off by default) averages the normalised embeddings of the image and its mirror, renormalises, then applies CWS.
 
 The official released PRW checkpoint loads into this model; the only missing key is the OIM queue pointer, which inference does not use. This gives a cheap way to check the pipeline before spending GPU hours: `python Scripts/eval_prw.py --ckpt <official epoch_*.pth>`.
+
+## Qualitative results
+
+```bash
+python Scripts/qualitative.py --data-root $PRW_ROOT --out results/qualitative \
+    --run "SOLIDER Swin-S" exp_prw_solider_swin_s/features_epoch_17.pt \
+    --run "ResNet-50" exp_prw/features_epoch_17.pt      # optional second model
+
+# on giano: CPU only, so the (usually free) rtx2080 partition is enough
+sbatch -p rtx2080 --gres=gpu:1 --cpus-per-task=4 --mem=16G --time=00:45:00 -J prw_quali -o logs/%x_%j.out --wrap \
+  "/scratch.hpc/$USER/venv-prw/bin/python3 Scripts/qualitative.py --data-root /scratch.hpc/$USER/data/PRW --out results/qualitative --run 'SOLIDER Swin-S' exp_prw_solider_swin_s/features_epoch_17.pt --run 'ResNet-50' exp_prw/features_epoch_17.pt"
+```
+
+The script needs no model and no GPU. It reads the feature caches that `eval_prw.py --cache` writes (`train_prw.sbatch` saves `features_epoch_N.pt` next to the checkpoint). It ranks the gallery with the unchanged `eval_search_prw`, so the figures show the retrievals behind the reported numbers, and it prints the same mAP. Each retrieved box is then compared with the people annotated in its frame: the query person (the eval's `correct` flag), another labelled person, an unlabelled person, the query person with a box too loose to count, or no person at all.
+
+- `<model>/search_random.jpg`: random queries with their top-5 results. Green and red boxes mark right and wrong results; a dashed yellow box shows where the query person really is when they were missed in that frame.
+- `<model>/failures_<cause>.jpg`: queries whose top-1 result is wrong, one figure per cause, with the whole top-1 frame.
+- `<model>/detections_*.jpg`: detections compared with every annotated person (matched, false detection, missed).
+- `compare_fixed.jpg`, `compare_broken.jpg` (two models): queries that the first model gets right and the second wrong, and the reverse.
+- `top1_errors.png` (causes of top-1 errors), `recall_by_height.png` (detection recall by person height), `summary.json` (every count, plus top-5/top-10 from the eval's top-10 lists), `<model>/queries.csv` (one row per query).
+
+Examples are drawn at random with a fixed `--seed` within each group, and every figure title gives the size of its group, so they are representative rather than hand-picked.
 
 ## Results (PRW test, `eval_search_prw`, det_thresh 0.5, no CBGM)
 
