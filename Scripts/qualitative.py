@@ -472,7 +472,7 @@ def recall_chart(runs, path):
     ax.set_xticks(x, labels)
     ax.set_xlim(-0.3, len(bins) + 0.5)
     ax.yaxis.grid(True, color=GRID, lw=0.8)
-    ax.set_xlabel("height of the annotated person (pixels, 1920x1080 frame)", color=INK2, fontsize=9)
+    ax.set_xlabel("height of the annotated person (pixels in the original frame)", color=INK2, fontsize=9)
     ax.set_ylabel("people detected (%)", color=INK2, fontsize=9)
     ax.set_title(f"Detection recall by person height (score ≥ {runs[0]['summary']['det_thresh']},"
                  " IoU ≥ 0.5)", fontsize=11, color=INK, loc="left", pad=26)
