@@ -6,7 +6,7 @@ The model code is adapted closely from the official repository [serend1p1ty/SeqN
 
 The optional Swin backbone follows [SOLIDER-PersonSearch](https://github.com/tinyvision/SOLIDER-PersonSearch) (W. Chen et al., *Beyond Appearance: a Semantic Controllable Self-Supervised Learning Framework for Human-Centric Visual Tasks*, CVPR 2023). Its Swin Transformer code is copied from [SOLIDER](https://github.com/tinyvision/SOLIDER) (Apache License 2.0, see `LICENSE-SOLIDER`), and it uses SOLIDER's self-supervised weights, pre-trained on LUPerson (4.18M unlabelled person images).
 
-> `main.ipynb`, `report.md` and `weights/` belong to the earlier course submission: a single-stage Faster R-CNN FPN with OIM and NAE. They do not use this code. The original code is preserved in `archive/course_submission_v1/`.
+> `main.ipynb` presents this reimplementation: method, training, quantitative and qualitative results. `report.md` and `weights/` belong to the earlier course submission, a single-stage Faster R-CNN FPN with OIM and NAE, and do not use this code. That submission, including its original notebook, is preserved in `archive/course_submission_v1/`.
 
 ## Layout
 
@@ -118,6 +118,16 @@ The script needs no model and no GPU. It reads the feature caches that `eval_prw
 - `top1_errors.png` (causes of top-1 errors), `recall_by_height.png` (detection recall by person height), `summary.json` (every count, plus top-5/top-10 from the eval's top-10 lists), `<model>/queries.csv` (one row per query).
 
 Examples are drawn at random with a fixed `--seed` within each group, and every figure title gives the size of its group, so they are representative rather than hand-picked.
+
+## Notebook
+
+`main.ipynb` reads the files in the repository (`exp_*/`, `results/qualitative/`) and runs without a GPU; only Section 1 needs the PRW frames. Its flags `DO_TRAIN`, `RUN_EVAL` and `RUN_QUALI` (off by default) repeat training, evaluation and the qualitative figures. To execute it with outputs on giano, on the CPU:
+
+```bash
+/scratch.hpc/$USER/venv-prw/bin/pip install --no-cache-dir nbconvert ipykernel   # once
+sbatch -p rtx2080 --gres=gpu:1 --cpus-per-task=4 --mem=16G --time=00:30:00 -J prw_nb -o logs/%x_%j.out --wrap \
+  "export PATH=/scratch.hpc/$USER/venv-prw/bin:\$PATH; jupyter nbconvert --to notebook --execute --inplace --ExecutePreprocessor.timeout=1800 main.ipynb"
+```
 
 ## Results (PRW test, `eval_search_prw`, det_thresh 0.5, no CBGM)
 
