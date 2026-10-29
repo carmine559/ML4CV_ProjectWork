@@ -9,3 +9,11 @@ data/
 *.pth
 *.pt
 __pycache__/
+
+.claude/
+slurm/ 
+tools/
+logs/
+exp_prw/
+exp_prw_solider_swin_s/
+exp_prw_solider_swin_s_head10x/
