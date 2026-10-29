@@ -1,0 +1,141 @@
+{
+  "seed": 0,
+  "runs": [
+    {
+      "label": "SOLIDER Swin-S",
+      "features": "exp_prw_solider_swin_s/features_epoch_17.pt",
+      "det_thresh": 0.5,
+      "n_queries": 2057,
+      "mAP": 0.6018959097320584,
+      "top1": 0.8736023334953816,
+      "top5": 0.9416626154594069,
+      "top10": 0.9538162372386971,
+      "top1_groups": {
+        "correct": 1797,
+        "never_detected": 0,
+        "same_frame": 15,
+        "lookalike": 125,
+        "unlabeled": 60,
+        "loose_box": 7,
+        "no_person": 53
+      },
+      "query_person_frames": 77122,
+      "query_person_frames_detected": 75434,
+      "detection_recall": 0.95658766259676,
+      "recall_by_height": [
+        {
+          "min_px": 0,
+          "max_px": 75,
+          "n": 233,
+          "recall": 0.5236051502145923
+        },
+        {
+          "min_px": 75,
+          "max_px": 100,
+          "n": 1762,
+          "recall": 0.8234960272417707
+        },
+        {
+          "min_px": 100,
+          "max_px": 150,
+          "n": 8677,
+          "recall": 0.9532096346663593
+        },
+        {
+          "min_px": 150,
+          "max_px": 200,
+          "n": 4455,
+          "recall": 0.9757575757575757
+        },
+        {
+          "min_px": 200,
+          "max_px": 300,
+          "n": 5176,
+          "recall": 0.9812596599690881
+        },
+        {
+          "min_px": 300,
+          "max_px": 450,
+          "n": 3156,
+          "recall": 0.9860583016476553
+        },
+        {
+          "min_px": 450,
+          "max_px": null,
+          "n": 1603,
+          "recall": 0.9931378665003119
+        }
+      ]
+    },
+    {
+      "label": "ResNet-50",
+      "features": "exp_prw/features_epoch_17.pt",
+      "det_thresh": 0.5,
+      "n_queries": 2057,
+      "mAP": 0.46404014169500735,
+      "top1": 0.83082158483228,
+      "top5": 0.9236752552260573,
+      "top10": 0.9436071949440933,
+      "top1_groups": {
+        "correct": 1709,
+        "never_detected": 0,
+        "same_frame": 5,
+        "lookalike": 222,
+        "unlabeled": 77,
+        "loose_box": 1,
+        "no_person": 43
+      },
+      "query_person_frames": 77122,
+      "query_person_frames_detected": 75758,
+      "detection_recall": 0.9644880695874232,
+      "recall_by_height": [
+        {
+          "min_px": 0,
+          "max_px": 75,
+          "n": 233,
+          "recall": 0.51931330472103
+        },
+        {
+          "min_px": 75,
+          "max_px": 100,
+          "n": 1762,
+          "recall": 0.8615209988649262
+        },
+        {
+          "min_px": 100,
+          "max_px": 150,
+          "n": 8677,
+          "recall": 0.9635818831393339
+        },
+        {
+          "min_px": 150,
+          "max_px": 200,
+          "n": 4455,
+          "recall": 0.9827160493827161
+        },
+        {
+          "min_px": 200,
+          "max_px": 300,
+          "n": 5176,
+          "recall": 0.9849304482225657
+        },
+        {
+          "min_px": 300,
+          "max_px": 450,
+          "n": 3156,
+          "recall": 0.982256020278834
+        },
+        {
+          "min_px": 450,
+          "max_px": null,
+          "n": 1603,
+          "recall": 0.9956331877729258
+        }
+      ]
+    }
+  ],
+  "compare": {
+    "fixed": 186,
+    "broken": 98
+  }
+}

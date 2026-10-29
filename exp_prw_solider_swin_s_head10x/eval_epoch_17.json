@@ -1,0 +1,35 @@
+{
+  "ckpt": "/scratch.hpc/carmine.santella/ML4CV_ProjectWork/exp_prw_solider_swin_s_head10x/epoch_17.pth",
+  "flip_tta": false,
+  "amp": "off",
+  "n_gallery": 6112,
+  "n_query": 2057,
+  "cws": true,
+  "data_root": "/scratch.hpc/carmine.santella/data/PRW",
+  "detection": {
+    "recall": 0.9598994493655734,
+    "ap": 0.9225603770569308
+  },
+  "search": [
+    {
+      "det_thresh": 0.5,
+      "mAP": 0.5879399872321066,
+      "top1": 0.8585318424890618
+    },
+    {
+      "det_thresh": 0.6,
+      "mAP": 0.5879254253201373,
+      "top1": 0.8585318424890618
+    },
+    {
+      "det_thresh": 0.7,
+      "mAP": 0.5878950429598785,
+      "top1": 0.8585318424890618
+    },
+    {
+      "det_thresh": 0.8,
+      "mAP": 0.5878089158636942,
+      "top1": 0.8585318424890618
+    }
+  ]
+}

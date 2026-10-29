@@ -1,0 +1,14 @@
+=== SOLIDER Swin-S: exp_prw_solider_swin_s/features_epoch_17.pt
+search ranking:
+  mAP = 60.19%
+  top- 1 = 87.36%
+mAP 60.19% | top-1 87.36% | top-5 94.17% | top-10 95.38% | detection recall 95.66%
+top-1 groups: {'correct': 1797, 'never_detected': 0, 'same_frame': 15, 'lookalike': 125, 'unlabeled': 60, 'loose_box': 7, 'no_person': 53}
+=== ResNet-50: exp_prw/features_epoch_17.pt
+search ranking:
+  mAP = 46.40%
+  top- 1 = 83.08%
+mAP 46.40% | top-1 83.08% | top-5 92.37% | top-10 94.36% | detection recall 96.45%
+top-1 groups: {'correct': 1709, 'never_detected': 0, 'same_frame': 5, 'lookalike': 222, 'unlabeled': 77, 'loose_box': 1, 'no_person': 43}
+top-1: SOLIDER Swin-S fixes 186 queries of ResNet-50, breaks 98
+saved results/qualitative
