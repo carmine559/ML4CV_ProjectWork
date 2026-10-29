@@ -109,11 +109,11 @@ sbatch -p rtx2080 --gres=gpu:1 --cpus-per-task=4 --mem=16G --time=00:45:00 -J pr
   "/scratch.hpc/$USER/venv-prw/bin/python3 Scripts/qualitative.py --data-root /scratch.hpc/$USER/data/PRW --out results/qualitative --run 'SOLIDER Swin-S' exp_prw_solider_swin_s/features_epoch_17.pt --run 'ResNet-50' exp_prw/features_epoch_17.pt"
 ```
 
-The script needs no model and no GPU. It reads the feature caches that `eval_prw.py --cache` writes (`train_prw.sbatch` saves `features_epoch_N.pt` next to the checkpoint). It ranks the gallery with the unchanged `eval_search_prw`, so the figures show the retrievals behind the reported numbers, and it prints the same mAP. Each retrieved box is then compared with the people annotated in its frame: the query person (the eval's `correct` flag), another labelled person, an unlabelled person, the query person with a box too loose to count, or no person at all.
+The script needs no model and no GPU. It reads the feature caches that `eval_prw.py --cache` writes (`train_prw.sbatch` saves `features_epoch_N.pt` next to the checkpoint). It ranks the gallery with the unchanged `eval_search_prw`, so the figures show the retrievals behind the reported numbers, and it prints the same mAP. Each retrieved box is then compared with the people annotated in its frame: the query person (the eval's `correct` flag), another labelled person, an unlabelled person, the query person with a box too loose to count, or no annotated person. The last case is either a false detection or a person PRW left unannotated in that frame, sometimes the query person themselves.
 
 - `<model>/search_random.jpg`: random queries with their top-5 results. Green and red boxes mark right and wrong results; a dashed yellow box shows where the query person really is when they were missed in that frame.
 - `<model>/failures_<cause>.jpg`: queries whose top-1 result is wrong, one figure per cause, with the whole top-1 frame.
-- `<model>/detections_*.jpg`: detections compared with every annotated person (matched, false detection, missed).
+- `<model>/detections_*.jpg`: detections compared with every annotated person (matched, no annotated person, missed).
 - `compare_fixed.jpg`, `compare_broken.jpg` (two models): queries that the first model gets right and the second wrong, and the reverse.
 - `top1_errors.png` (causes of top-1 errors), `recall_by_height.png` (detection recall by person height), `summary.json` (every count, plus top-5/top-10 from the eval's top-10 lists), `<model>/queries.csv` (one row per query).
 
@@ -126,9 +126,11 @@ Examples are drawn at random with a fixed `--seed` within each group, and every 
 | SeqNet, paper (NAE+SeqNet, w/o CBGM) | 46.7 | 83.4 |
 | This reimplementation, fp32 (1x L40, 3h20m) | 46.40 | 83.08 |
 | SOLIDER Swin-S + SeqNet, paper (SOLIDER-PersonSearch README) | 59.84 | 86.73 |
-| This reimplementation, SOLIDER Swin-S, fp32 (1x L40, 6h00m) | **60.19** | **87.36** |
-| + flip TTA | TBD | TBD |
-| SOLIDER Swin-S, head lr x10 (`prw_solider_swin_s_head10x.yaml`) | TBD | TBD |
+| This reimplementation, SOLIDER Swin-S, fp32 (1x L40, 6h00m) | 60.19 | 87.36 |
+| + flip TTA (`eval_prw.py --flip-tta`, same checkpoint) | **63.06** | **88.48** |
+| SOLIDER Swin-S, head lr x10 (`prw_solider_swin_s_head10x.yaml`, 6h00m) | 58.79 | 85.85 |
+
+Flip TTA changes only how the features are extracted (the course `eval_search_prw` is untouched), but the published numbers above are without test-time augmentation, so compare them with 60.19. The 10x head lr improves detection (recall 95.99 vs 95.66, AP 92.26 vs 91.49) but lowers search accuracy; each configuration is a single run.
 
 CBGM (paper: 47.6 / 87.6) is not used because it lives inside the evaluation function. SOLIDER-PersonSearch uses SeqNet's evaluation code with CBGM off by default.
 

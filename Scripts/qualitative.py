@@ -15,7 +15,8 @@ annotated people of its frame:
   unlabeled  an annotated person without identity (PRW id -2)
   loose box  the query person, but the box overlaps it with 0.3 <= IoU < the eval threshold
   duplicate  the query person, already retrieved with a higher score in the same frame
-  no person  no annotated person under the box (false detection)
+  no person  no annotated person under the box: a false detection, or a person PRW did not
+             annotate in that frame (it happens, sometimes with the query person themselves)
 Top-1 errors are grouped by these labels (plus "never detected": the detector found the
 query person in none of their gallery frames). Examples are drawn at random with a fixed seed
 inside each group, and summary.json gives the size of every group.
@@ -60,7 +61,7 @@ GROUPS = {  # top-1 outcome -> description (order = order in the charts)
     "lookalike": "another labelled person",
     "unlabeled": "an unlabelled person",
     "loose_box": "right person, inaccurate box",
-    "no_person": "not a person (false detection)",
+    "no_person": "no annotated person under the box",
 }
 HEIGHT_BINS = (0, 75, 100, 150, 200, 300, 450, np.inf)
 
@@ -119,7 +120,7 @@ def describe_box(roi, anno, query_pid, correct):
 
 BOX_TEXT = {"correct": "✓ correct", "unlabeled": "✗ unlabelled person",
             "duplicate": "✗ duplicate", "loose_box": "✗ right person, loose box",
-            "no_person": "✗ not a person"}
+            "no_person": "✗ no annotated person"}
 
 
 def box_text(label, pid):
@@ -390,13 +391,13 @@ def detection_figure(run, names, title, path, width=960):
             if not ok:
                 _box(ax, b, (0, 0), C_TRUE, lw=1.6, ls="--", scale=s)
         ax.set_title(f"{name}: {len(gt_ok)} people, {int(gt_ok.sum())} detected, {int((~gt_ok).sum())} missed,"
-                     f" {int((~det_ok).sum())} false detections", fontsize=9, color=INK)
+                     f" {int((~det_ok).sum())} detections without an annotated person", fontsize=9, color=INK)
         ax.set_xticks([])
         ax.set_yticks([])
     for ax in axes.ravel()[len(names):]:
         ax.axis("off")
     h = [Line2D([], [], color=C_HIT, lw=2, label="detection matching a person (IoU ≥ 0.5)"),
-         Line2D([], [], color=C_WRONG, lw=2, label="false detection"),
+         Line2D([], [], color=C_WRONG, lw=2, label="detection without an annotated person"),
          Line2D([], [], color=C_TRUE, lw=2, ls="--", label="missed person (ground truth)")]
     fig.legend(handles=h, loc="upper center", bbox_to_anchor=(0.5, 1.0), ncol=3, frameon=False,
                fontsize=9, labelcolor=INK2)
